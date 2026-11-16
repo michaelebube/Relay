@@ -1,4 +1,5 @@
 import express from "express";
+import endpointsRouter from "./modules/endpoints/endpoints.routes";
 
 const app = express();
 
@@ -10,5 +11,7 @@ app.get("/health", (req, res) => {
         service: "Relay"
     });
 });
+
+app.use("/api/v1/endpoints", endpointsRouter);
 
 export default app;
