@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, boolean, unique, integer, jsonb } from "drizzle-orm/pg-core";
 
 export const clients = pgTable("clients", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -33,5 +33,28 @@ export const endpointSubscriptions = pgTable("endpoint_subscriptions", {
     eventType: text("event_type").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [unique("endpoint_event_unique").on(table.endpointId, table.eventType)]
+);
+
+export const events = pgTable('events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clientId: uuid('client_id').references(() => clients.id, {onDelete: "cascade"}).notNull(),
+  eventType: text('event_type').notNull(),
+  payload: jsonb('payload').notNull(),
+  idempotencyKey: text('idempotency_key'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  }, (table) => [unique('event_idempotency_unique').on(table.clientId, table.idempotencyKey)]
+);
+
+export const deliveries = pgTable('deliveries', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventId: uuid('event_id').references(() => events.id, {onDelete: "cascade"}).notNull(),
+  endpointId: uuid('endpoint_id').references(() => endpoints.id, {onDelete: "cascade"}).notNull(),
+  status: text('status').default('pending').notNull(),
+  attemptCount: integer('attempt_count').default(0).notNull(),
+  nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }),
+  lastAttemptAt: timestamp('last_attempt_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [unique("event_endpoint_unique").on(table.eventId, table.endpointId)]
 );
 
