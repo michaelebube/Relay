@@ -36,3 +36,10 @@ export async function authenticateMiddleware(req: Request, res: Response, next: 
     req.clientId = apiKey.clientId;
     next();
 }
+
+export function getClientId(req: Request): string {
+    if (!req.clientId) {
+        throw new Error("Authenticated clientId is missing on request");
+    }
+    return req.clientId;
+}

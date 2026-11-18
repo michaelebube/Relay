@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { z } from "zod";
+import { getClientId } from "../../middleware/authenticate";
 import {
   createEndpointSchema,
   updateEndpointSchema,
@@ -9,7 +10,7 @@ import * as endpointsService from "./endpoints.service";
 const uuidParamSchema = z.uuid("Invalid endpoint ID format");
 
 export async function createEndpointHandler(req: Request, res: Response) {
-  const clientId = req.clientId!;
+  const clientId = getClientId(req);
 
   const parsed = createEndpointSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -24,14 +25,14 @@ export async function createEndpointHandler(req: Request, res: Response) {
 }
 
 export async function listEndpointsHandler(req: Request, res: Response) {
-  const clientId = req.clientId!;
+  const clientId = getClientId(req);
 
   const endpoints = await endpointsService.listEndpoints(clientId);
   return res.status(200).json({ data: endpoints });
 }
 
 export async function getEndpointHandler(req: Request, res: Response) {
-  const clientId = req.clientId!;
+  const clientId = getClientId(req);
 
   const idParsed = uuidParamSchema.safeParse(req.params.id);
   if (!idParsed.success) {
@@ -47,7 +48,7 @@ export async function getEndpointHandler(req: Request, res: Response) {
 }
 
 export async function updateEndpointHandler(req: Request, res: Response) {
-  const clientId = req.clientId!;
+  const clientId = getClientId(req);
 
   const idParsed = uuidParamSchema.safeParse(req.params.id);
   if (!idParsed.success) {
@@ -78,7 +79,7 @@ export async function updateEndpointHandler(req: Request, res: Response) {
 }
 
 export async function deleteEndpointHandler(req: Request, res: Response) {
-  const clientId = req.clientId!;
+  const clientId = getClientId(req);
 
   const idParsed = uuidParamSchema.safeParse(req.params.id);
   if (!idParsed.success) {

@@ -1,11 +1,12 @@
 import {Request, Response} from "express";
 import {z} from "zod";
+import {getClientId} from "../../middleware/authenticate";
 import {createEventSchema} from "./events.validation";
 import * as eventsService from "./events.service";
 
 
 export async function createEventHandler(req: Request, res: Response) {
-    const clientId = req.clientId!;
+    const clientId = getClientId(req);
 
     const parsed = createEventSchema.safeParse(req.body);
     if (!parsed.success) {
