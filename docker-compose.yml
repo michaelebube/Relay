@@ -17,7 +17,7 @@ services:
     container_name: relay-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "56379:6379"
     volumes:
       - redis_data:/data
 
