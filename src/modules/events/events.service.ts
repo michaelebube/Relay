@@ -2,9 +2,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { deliveries, endpoints, endpointSubscriptions, events } from "../../db/schema";
 import { CreateEventInput } from "./events.validation";
+import {enqueueDeliveriesForEvent} from "../deliveries/deliveries.service";
 
 export async function createEvent(clientId: string, data: CreateEventInput) {
-  return await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // Step 1: Attempt to insert the event atomically.
     // If (clientId, idempotencyKey) already exists, Postgres skips the insert
     // instead of throwing an error, and `insertedEvent` will be undefined.
@@ -89,4 +90,17 @@ export async function createEvent(clientId: string, data: CreateEventInput) {
       duplicate: false,
     };
   });
+
+    if (!result.duplicate && result.deliveries.length > 0) {
+    try {
+      await enqueueDeliveriesForEvent(result.event.id);
+    } catch (error) {
+      console.error(
+        `Failed to enqueue deliveries for event ${result.event.id}. Pending records remain in PostgreSQL for recovery:`,
+        error
+      );
+    }
+  }
+
+  return result;
 }
