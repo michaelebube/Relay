@@ -58,3 +58,16 @@ export const deliveries = pgTable('deliveries', {
 }, (table) => [unique("event_endpoint_unique").on(table.eventId, table.endpointId)]
 );
 
+export const deliveryAttempts = pgTable('delivery_attempts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  deliveryId: uuid('delivery_id').references(() => deliveries.id, {onDelete: "cascade"}).notNull(),
+  attemptNumber: integer('attempt_number').notNull(),
+  status: text('status').notNull(),
+  httpStatus: integer('http_status'),
+  responseBody: text('response_body'),
+  errorMessage: text('error_message'),
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [unique("delivery_attempt_unique").on(table.deliveryId, table.attemptNumber)]
+);
+
